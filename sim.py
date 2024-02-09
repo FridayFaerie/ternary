@@ -4,6 +4,7 @@ from sys import exit
 
 pygame.init()
 screen = pygame.display.set_mode((800,400))
+pygame.display.set_caption('sim')
 
 circuit = {'in1': ['heyo'], 'in2': ['hi']}
 
@@ -16,3 +17,6 @@ while True:
 
     for i in circuit:
         print(circuit[i])
+
+
+    pygame.display.update()
