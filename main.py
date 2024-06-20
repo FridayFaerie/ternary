@@ -1,12 +1,12 @@
 #         id: [type,    inputs, outputs         ]
 circuit = {0: ["input", [1,-1], [(1,0),(2,0)]   ], 
-           1: ["split", [0],    [(3,0),(4,0)]   ],
-           2: ["split", [0],    [(3,1),(4,1)]   ],
-           3: ["min",   [0,0],  [(6,0)]         ],
-           4: ["max",   [0,0],  [(5,0)]         ],
-           5: ["neg",   [0],    [(6,1)]         ],
-           6: ["max",   [0,0],  [(7,0)]         ],
-           7: ["out",   [0],    []              ]
+           1: ["split", [2],    [(3,0),(4,0)]   ],
+           2: ["split", [2],    [(3,1),(4,1)]   ],
+           3: ["min",   [2,2],  [(6,0)]         ],
+           4: ["max",   [2,2],  [(5,0)]         ],
+           5: ["neg",   [2],    [(6,1)]         ],
+           6: ["max",   [2,2],  [(7,0)]         ],
+           7: ["out",   [2],    []              ]
            }
 tasklist = []
 
@@ -25,46 +25,43 @@ def beginSolve():
 
 
 def process(component):
-    type,inputs,outputs = component
+    type,inputs,destinations = component
     match type:
         case "input":
-            for i in range(len(inputs)):
-                output = outputs[i]
-                circuit[output[0]][1][output[1]] = inputs[i]
-                if output[0] not in tasklist:
-                    tasklist.append(output[0])
+            size = len(inputs)
+            outputs = [None] * size
+            for i in range(size):
+                outputs[i] = inputs[i]
 
         case "neg":
-            out0 = outputs[0]
-            circuit[out0[0]][1][out0[1]] = inputs[0]*-1
-            if out0[0] not in tasklist:
-                tasklist.append(out0[0])
+            outputs = [inputs[0]*-1]
 
         case "max":
-            out0 = outputs[0]
-            circuit[out0[0]][1][out0[1]] = max(inputs[0],inputs[1])
-            if out0[0] not in tasklist:
-                tasklist.append(out0[0])
+            outputs = [max(inputs[0],inputs[1])]
         
         case "min":
-            out0 = outputs[0]
-            circuit[out0[0]][1][out0[1]] = min(inputs[0],inputs[1])
-            if out0[0] not in tasklist:
-                tasklist.append(out0[0])
+            outputs = [min(inputs[0],inputs[1])]
         
         case "split":
-            for output in outputs:
-                circuit[output[0]][1][output[1]] = inputs[0]
-                if output[0] not in tasklist:
-                    tasklist.append(output[0])
+            outputs = [inputs[0]] * 2
 
         case "out":
+            outputs = []
             for i in range(len(inputs)):
                 print(f"output {i}: {inputs[i]}")
-            return
-
         case other:
-            print(type+" not implemented")
+            print(type + " not implemented")
+    
+    for i in range(len(outputs)):
+        destination = destinations[i]
+        value = outputs[i]
+
+        if circuit[destination[0]][1][destination[1]] == value:
+            continue
+        circuit[destination[0]][1][destination[1]] = value
+        if destination[0] not in tasklist:
+            tasklist.append(destination[0])
+    
 
 
 
