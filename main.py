@@ -14,20 +14,6 @@ custom = {
 }
 tasklist = []
 
-def beginSolve():
-    process(circuit[0])
-    counter = 0
-
-    while tasklist != []:
-        process(circuit[tasklist[0]])
-        tasklist.pop(0)
-
-        counter += 1
-        if counter>100:
-            print("depth reached")
-            return
-
-
 def process(component):
     gate,inputs,destinations = component
     match gate:
@@ -89,10 +75,16 @@ def process(component):
         circuit[destination[0]][1][destination[1]] = value
         if destination[0] not in tasklist:
             tasklist.append(destination[0])
-    
 
 
+process(circuit[0])
+counter = 0
 
+while tasklist != []:
+    process(circuit[tasklist[0]])
+    tasklist.pop(0)
 
-beginSolve()
-print(circuit)
+    counter += 1
+    if counter>100:
+        print("depth reached")
+        tasklist = []
