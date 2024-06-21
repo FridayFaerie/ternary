@@ -3,17 +3,19 @@ clock = pygame.time.Clock()
 from pygame.locals import *
 pygame.init()
 pygame.display.set_caption('Ternary Simulator')
+icon = pygame.Surface((10,10))
+icon.fill((255,255,255))
+pygame.display.set_icon(icon)
 
-WINDOW_SIZE = (600,400)
+WINDOW_SIZE = (800,600)
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
-display = pygame.Surface((300,200))
+display = pygame.Surface((400,300))
 
-
+update_required = False
 
 
 
 while True:
-    display.fill((146,244,255))
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -21,14 +23,17 @@ while True:
             sys.exit()
         if event.type == KEYDOWN:
             if event.key == K_RIGHT:
-                continue
+                update_required = True
+            elif event.key == K_LEFT:
+                update_required = False
 
-    g
+    
 
 
         
-
-    screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
-    pygame.display.update()
+    if update_required:
+        screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
+        pygame.display.update()
+        display.fill((80,96,126))
     clock.tick(60)
 

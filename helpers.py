@@ -17,7 +17,7 @@ class Circuit():
 
             counter += 1
             if counter >100:
-                print("depth reached")
+                print("max cycles exceeded")
                 break
         
     def update_gate(self, component):
@@ -34,8 +34,10 @@ class Circuit():
                 outputs = [max(inputs[0],inputs[1])]          
             case "min":
                 outputs = [min(inputs[0],inputs[1])]          
+            case "wire":
+                outputs = [inputs[0]]
             case "split":
-                outputs = [inputs[0]] * len(destinations)
+                outputs = [inputs[0],inputs[0]]
             case "out":
                 outputs = []
                 print(outputs)
@@ -70,16 +72,16 @@ class Circuit():
                 self.tasklist.append(destination[0])
 
 '''
-#  id: [type,       inputs, outputs         ]
+#  id: [type,       inputs, destinations,   origins, positions  ]
 gates_mul = {
-    0: ["input",    [1,0], [(1,0),(2,0)]   ],
-    1: ["split",    [2],    [(3,0),(4,0)]   ],
-    2: ["split",    [2],    [(3,1),(4,1)]   ],
-    3: ["min",      [2,2],  [(6,0)]         ],
-    4: ["max",      [2,2],  [(5,0)]         ],
-    5: ["neg",      [2],    [(6,1)]         ],
-    6: ["max",      [2,2],  [(-1,0)]        ],
-    -1:["out",      [2],    []             ]
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [],        [0,0]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [0],       [0,0]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [0],       [0,0]   ],
+    3: ["min",      [2,2],  [(6,0)],         [1,2],     [0,0]   ],
+    4: ["max",      [2,2],  [(5,0)],         [1,2],     [0,0]   ],
+    5: ["neg",      [2],    [(6,1)],         [4],       [0,0]   ],
+    6: ["max",      [2,2],  [(-1,0)],        [3,5],     [0,0]   ],
+    -1:["out",      [2],    [],              [6],       [0,0]   ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
