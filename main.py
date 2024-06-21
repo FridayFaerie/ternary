@@ -9,6 +9,9 @@ circuit = {
     6: ["max",      [2,2],  [(7,0)]         ],
     7: ["out",      [2],    []              ]
     }
+custom = {
+    "pos": {'0':[1],'+':[1],'-':[2]}
+}
 tasklist = []
 
 def beginSolve():
@@ -52,15 +55,29 @@ def process(component):
                 print(f"output {i}: {inputs[i]}")
 
         case other:
-            if gate[0]!="new":
+            if gate[0]!="data":
                 outputs = []
-                print(f"{gate} not implemented")
+                print(f"gate {gate} not found")
                 exit()
 
-            #TODO: custom lookup table gate
-            outputs = []
-            print("custom gates not implemented")
-            exit()
+            if gate[1] in custom:
+                inputstring = ''
+                for input in inputs:
+                    match input:
+                        case 1:
+                            inputstring += '+'
+                        case -1:
+                            inputstring += '-'
+                        case 0:
+                            inputstring += '0'
+                outputs = custom[gate[1]][inputstring]
+
+            else:
+                #TODO: finding gate from file
+                print("finding gates from file not implemented")
+                print(f"custom gate {gate[1]} not found")
+                outputs = []
+                exit()
 
 
     for i in range(len(outputs)):
@@ -78,3 +95,4 @@ def process(component):
 
 
 beginSolve()
+print(circuit)
