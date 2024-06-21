@@ -69,17 +69,17 @@ class Circuit():
             if destination[0] not in self.tasklist:
                 self.tasklist.append(destination[0])
 
-'''
+#'''
 #  id: [type,       inputs, outputs         ]
 gates_mul = {
-    0: ["input",    [1,0], [(1,0),(2,0)]   ],
+    0: ["input",    [1,0],  [(1,0),(2,0)]   ],
     1: ["split",    [2],    [(3,0),(4,0)]   ],
     2: ["split",    [2],    [(3,1),(4,1)]   ],
     3: ["min",      [2,2],  [(6,0)]         ],
     4: ["max",      [2,2],  [(5,0)]         ],
     5: ["neg",      [2],    [(6,1)]         ],
     6: ["max",      [2,2],  [(-1,0)]        ],
-    -1:["out",      [2],    []             ]
+    -1:["out",      [2],    []              ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
@@ -88,5 +88,4 @@ custom_gates = {
 circuitA = Circuit(gates_mul)
 circuitA.process()
 print(circuitA.gates)
-
-'''
+#'''
