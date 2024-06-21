@@ -21,8 +21,7 @@ while True:
             if event.key == K_RIGHT:
                 continue
 
-
+    screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
     pygame.display.update()
     clock.tick(60)
-
 

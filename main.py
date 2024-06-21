@@ -37,15 +37,9 @@ def process(component):
 
         case "out":
             outputs = []
-            for i in range(len(inputs)):
-                print(f"output {i}: {inputs[i]}")
+            print(outputs)
 
         case other:
-            if gate[0]!="data":
-                outputs = []
-                print(f"gate {gate} not found")
-                exit()
-
             if gate[1] in custom:
                 inputstring = ''
                 for input in inputs:
@@ -59,10 +53,9 @@ def process(component):
                 outputs = custom[gate[1]][inputstring]
 
             else:
+                print(f"gate {gate} not found")
                 #TODO: finding gate from file
                 print("finding gates from file not implemented")
-                print(f"custom gate {gate[1]} not found")
-                outputs = []
                 exit()
 
 

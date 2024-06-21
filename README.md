@@ -1,2 +1,2 @@
 # ternary
-Just some work for a ternary circuit
+Just some work for simulating a ternary circuit
