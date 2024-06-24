@@ -11,28 +11,39 @@ WINDOW_SIZE = (800,600)
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
 display = pygame.Surface((400,300))
 
-update_required = False
+update_required = True
 
+circuit = {
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [],        [0,0]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [0],       [0,0]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [0],       [0,0]   ],
+    3: ["min",      [2,2],  [(6,0)],         [1,2],     [0,0]   ],
+    4: ["max",      [2,2],  [(5,0)],         [1,2],     [0,0]   ],
+    5: ["neg",      [2],    [(6,1)],         [4],       [0,0]   ],
+    6: ["max",      [2,2],  [(-1,0)],        [3,5],     [0,0]   ],
+    -1:["out",      [2],    [],              [6],       [0,0]   ]
+    }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
 }
+tasklist = []
 
-def process(circuit):
-    if not circuit["tasklist"]:
-        update_gate(circuit)
+def process(circuit, tasklist):
+    if not tasklist:
+        update_gate(circuit, tasklist, 0)
     
     counter = 0
-    while circuit["tasklist"]:
-        update_gate(circuit, circuit["tasklist"][0])
-        circuit["tasklist"].pop(0)
+    while tasklist:
+        update_gate(circuit, tasklist, tasklist[0])
+        tasklist.pop(0)
 
         counter += 1
         if counter > 100:
             print("max cycles exceeded")
             break
 
-def update_gate(circuit, component=0):
-    gate,inputs,destinations = circuit[component]
+def update_gate(circuit, tasklist, component=0):
+    gate,inputs,destinations,*_ = circuit[component]
     match gate:
         case "input":
             size = len(inputs)
@@ -51,7 +62,7 @@ def update_gate(circuit, component=0):
             outputs = [inputs[0],inputs[0]]
         case "out":
             outputs = []
-            print(outputs)
+            #print(outputs)
         case other:
             if gate in custom_gates:
                 inputstring = ''
@@ -79,15 +90,15 @@ def update_gate(circuit, component=0):
             continue
         else:
             circuit[destination[0]][1][destination[1]] = value
-        if destination[0] not in circuit["tasklist"]:
-            circuit["tasklist"](destination[0])
+        if destination[0] not in tasklist:
+            tasklist.append(destination[0])
 
 
 
 
 
 while True:
-
+    #event handler
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -98,7 +109,10 @@ while True:
             elif event.key == K_LEFT:
                 update_required = False
 
-    
+    #render components on display
+    for component in circuit:
+        render(circuit[component])
+        
 
 
         
@@ -111,14 +125,14 @@ while True:
 '''
 #  id: [type,       inputs, destinations,   origins, positions  ]
 gates_mul = {
-    0: ["input",    [1,0],  [(1,0),(2,0)],   [],        [0,0]   ],
-    1: ["split",    [2],    [(3,0),(4,0)],   [0],       [0,0]   ],
-    2: ["split",    [2],    [(3,1),(4,1)],   [0],       [0,0]   ],
-    3: ["min",      [2,2],  [(6,0)],         [1,2],     [0,0]   ],
-    4: ["max",      [2,2],  [(5,0)],         [1,2],     [0,0]   ],
-    5: ["neg",      [2],    [(6,1)],         [4],       [0,0]   ],
-    6: ["max",      [2,2],  [(-1,0)],        [3,5],     [0,0]   ],
-    -1:["out",      [2],    [],              [6],       [0,0]   ]
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [0,0]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [0,0]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [0,0]   ],
+    3: ["min",      [2,2],  [(6,0)],         [0,0]   ],
+    4: ["max",      [2,2],  [(5,0)],         [0,0]   ],
+    5: ["neg",      [2],    [(6,1)],         [0,0]   ],
+    6: ["max",      [2,2],  [(-1,0)],        [0,0]   ],
+    -1:["out",      [2],    [],              [0,0]   ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
