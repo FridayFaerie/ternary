@@ -14,14 +14,14 @@ display = pygame.Surface((400,300))
 update_required = True
 
 circuit = {
-    0: ["input",    [1,0],  [(1,0),(2,0)],   [],        [0,0]   ],
-    1: ["split",    [2],    [(3,0),(4,0)],   [0],       [0,0]   ],
-    2: ["split",    [2],    [(3,1),(4,1)],   [0],       [0,0]   ],
-    3: ["min",      [2,2],  [(6,0)],         [1,2],     [0,0]   ],
-    4: ["max",      [2,2],  [(5,0)],         [1,2],     [0,0]   ],
-    5: ["neg",      [2],    [(6,1)],         [4],       [0,0]   ],
-    6: ["max",      [2,2],  [(-1,0)],        [3,5],     [0,0]   ],
-    -1:["out",      [2],    [],              [6],       [0,0]   ]
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [0,0]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [0,100]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [300,200]   ],
+    3: ["min",      [2,2],  [(6,0)],         [0,0]   ],
+    4: ["max",      [2,2],  [(5,0)],         [0,0]   ],
+    5: ["neg",      [2],    [(6,1)],         [0,0]   ],
+    6: ["max",      [2,2],  [(-1,0)],        [0,0]   ],
+    -1:["out",      [2],    [],              [0,0]   ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
@@ -93,6 +93,18 @@ def update_gate(circuit, tasklist, component=0):
         if destination[0] not in tasklist:
             tasklist.append(destination[0])
 
+'''  id: [gate,    inputs, destinations,   position  ]
+gates_mul = {
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [0,0]   ],
+'''
+
+def render(component):
+    gates, inputs, destinations, position = component
+    main_rect = pygame.draw.rect(display,(255,255,255),Rect(position,(100,50)))
+    font = pygame.font.Font(None, 64)
+    text = font.render("This is a test", True, (10, 10, 10))
+    textpos = text.get_rect(centerx=display.get_width() / 2, y=10)
+    display.blit(text, textpos)
 
 
 
@@ -123,7 +135,7 @@ while True:
     clock.tick(60)
 
 '''
-#  id: [type,       inputs, destinations,   origins, positions  ]
+#  id: [gate,       inputs, destinations,   origins, positions  ]
 gates_mul = {
     0: ["input",    [1,0],  [(1,0),(2,0)],   [0,0]   ],
     1: ["split",    [2],    [(3,0),(4,0)],   [0,0]   ],
