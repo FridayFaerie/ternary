@@ -9,7 +9,9 @@ pygame.display.set_icon(icon)
 
 
 WINDOW_SIZE = (800,400)
-BACKGROUND_COLOUR = (80,96,126)
+#WINDOW_SIZE = (1600,800)
+BACKGROUND_COLOUR = (40,36,56)
+GATE_WIDTH = 130
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
 display = pygame.Surface((1600,800))
 
@@ -17,25 +19,37 @@ update_required = True
 
 colours = {
     -1: (255,0,0),
-    0:  (100,100,100),
+    0:  (150,150,150),
     1:  (0,0,255),
     2:  (0,0,0)
 }
 circuit = {
-    0: ["input",    [1,0],  [(1,0),(2,0)],   [50,100]   ],
-    1: ["split",    [2],    [(3,0),(4,0)],   [50,200]   ],
-    2: ["split",    [2],    [(3,1),(4,1)],   [50,300]   ],
-    3: ["min",      [2,2],  [(6,0)],         [250,100]  ],
-    4: ["max",      [2,2],  [(5,0)],         [250,200]  ],
-    5: ["neg",      [2],    [(6,1)],         [250,300]  ],
-    6: ["max",      [2,2],  [(-1,0)],        [450,100]  ],
-    -1:["out",      [2],    [],              [450,200]  ]
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [50,300]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [200,200]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [200,400]   ],
+    3: ["min",      [2,2],  [(6,0)],         [350,500]  ],
+    4: ["max",      [2,2],  [(5,0)],         [350,300]  ],
+    5: ["neg",      [2],    [(6,1)],         [500,300]  ],
+    6: ["max",      [2,2],  [(-1,0)],        [650,300]  ],
+    -1:["out",      [2],    [],              [800,300]  ]
     }
+wires = {
+    0: [[], (0,0), (1,0)],
+    1: [[], (0,1), (2,0)],
+    2: [[], (1,0), (3,0)],
+    3: [[], (1,1), (4,0)],
+    4: [[], (2,0), (3,1)],
+    5: [[], (2,1), (4,1)],
+    6: [[], (3,0), (6,0)],
+    7: [[], (4,0), (5,0)],
+    8: [[], (5,0), (6,1)],
+    9: [[], (6,0), (-1,0)]
+}
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
 }
 gate_styles = { #height, input#, output#, colour
-    "input":    [80,2,2,(23,24,195)],
+    "input":    [80,2,2,(123,74,195)],
     "split":    [80,1,2,(100,100,195)],
     "min":      [80,2,1,(200,150,230)],
     "max":      [80,2,1,(140,240,195)],
@@ -124,7 +138,7 @@ def render(component):
         case other:
             gate_style = gate_styles[gate]
 
-            main_rect = pygame.Rect(position,(100,gate_style[0]))
+            main_rect = pygame.Rect(position,(GATE_WIDTH,gate_style[0]))
 
             font = pygame.font.Font(None, 32)
             pygame.draw.rect(display,gate_style[3],main_rect,border_radius=5)
@@ -140,10 +154,21 @@ def render(component):
         colour = colours[inputs[i]]
         pygame.draw.circle(display, colour, (x,y), 7)
 
+def render_wire(wire):
+    path, source, destination = wire
+    source_gate = circuit[source[0]]
+    destination_gate = circuit[destination[0]]
+    source_style = gate_styles[source_gate[0]]
+    destination_style = gate_styles[destination_gate[0]]
 
+    colour = colours[destination_gate[1][destination[1]]]
+    start = [(source_gate[3][0]+GATE_WIDTH, source_gate[3][1]+int((source_style[0]/source_style[2])*(source[1]+0.5)))]
+    end = [(destination_gate[3][0],         destination_gate[3][1]+int((destination_style[0]/destination_style[1])*(destination[1]+0.5)))]
+
+    pygame.draw.lines(display, colour, False, start+path+end,10)
+    pygame.draw.circle(display, colour, start[0], 7)
 
 process(circuit,tasklist)
-print(circuit)
 while True:
     #event handler
     for event in pygame.event.get():
@@ -159,6 +184,8 @@ while True:
     #render components on display
     for component in circuit:
         render(circuit[component])
+    for wire in wires:
+        render_wire(wires[wire])
         
 
 
