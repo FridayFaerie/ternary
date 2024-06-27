@@ -8,8 +8,22 @@ icon.fill((255,255,255))
 pygame.display.set_icon(icon)
 
 
-WINDOW_SIZE = (800,400)
-#WINDOW_SIZE = (1600,800)
+if sys.platform == 'win32':
+    # On Windows, the monitor scaling can be set to something besides normal 100%.
+    # PyScreeze and Pillow needs to account for this to make accurate screenshots.
+    # TODO - How does macOS and Linux handle monitor scaling?
+    import ctypes
+    try:
+       ctypes.windll.user32.SetProcessDPIAware()
+    except AttributeError:
+        pass # Windows XP doesn't support monitor scaling, so just do nothing.
+
+
+
+print(pygame.display.list_modes())
+
+#WINDOW_SIZE = (800,400)
+WINDOW_SIZE = (1600,800)
 BACKGROUND_COLOUR = (40,36,56)
 GATE_WIDTH = 130
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
