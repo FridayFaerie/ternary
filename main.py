@@ -7,24 +7,40 @@ icon = pygame.Surface((10,10))
 icon.fill((255,255,255))
 pygame.display.set_icon(icon)
 
-WINDOW_SIZE = (800,600)
-screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
-display = pygame.Surface((400,300))
+
+WINDOW_SIZE = (1600,800)
+BACKGROUND_COLOUR = (80,96,126)
+display = pygame.display.set_mode(WINDOW_SIZE,0,32)
+#display = pygame.Surface((800,600))
 
 update_required = True
 
+colours = {
+    -1: (255,0,0),
+    0:  (100,100,100),
+    1:  (0,0,255),
+    2:  (0,0,0)
+}
 circuit = {
-    0: ["input",    [1,0],  [(1,0),(2,0)],   [0,0]   ],
-    1: ["split",    [2],    [(3,0),(4,0)],   [0,100]   ],
-    2: ["split",    [2],    [(3,1),(4,1)],   [300,200]   ],
-    3: ["min",      [2,2],  [(6,0)],         [0,0]   ],
-    4: ["max",      [2,2],  [(5,0)],         [0,0]   ],
-    5: ["neg",      [2],    [(6,1)],         [0,0]   ],
-    6: ["max",      [2,2],  [(-1,0)],        [0,0]   ],
-    -1:["out",      [2],    [],              [0,0]   ]
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [50,100]   ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [50,200]   ],
+    2: ["split",    [2],    [(3,1),(4,1)],   [50,300]   ],
+    3: ["min",      [2,2],  [(6,0)],         [250,100]   ],
+    4: ["max",      [2,2],  [(5,0)],         [250,200]   ],
+    5: ["neg",      [2],    [(6,1)],         [250,300]   ],
+    6: ["max",      [2,2],  [(-1,0)],        [450,100]   ],
+    -1:["out",      [2],    [],              [450,200]   ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
+}
+gate_styles = { #height, input#, output#, colour
+    "input":    [80,2,2,(23,24,195)],
+    "split":    [80,1,2,(100,100,195)],
+    "min":      [80,2,1,(200,150,230)],
+    "max":      [80,2,1,(140,240,195)],
+    "neg":      [40,1,1,(90,190,90)],
+    "out":      [40,1,0,(190,90,90)]
 }
 tasklist = []
 
@@ -99,16 +115,35 @@ gates_mul = {
 '''
 
 def render(component):
-    gates, inputs, destinations, position = component
-    main_rect = pygame.draw.rect(display,(255,255,255),Rect(position,(100,50)))
-    font = pygame.font.Font(None, 64)
-    text = font.render("This is a test", True, (10, 10, 10))
-    textpos = text.get_rect(centerx=display.get_width() / 2, y=10)
-    display.blit(text, textpos)
+    gate, inputs, destinations, position = component
+    match gate:
+        # case "input":
+        #     return
+        # case "out":
+        #     return
+        case other:
+            gate_style = gate_styles[gate]
+
+            main_rect = pygame.Rect(position,(100,gate_style[0]))
+
+            font = pygame.font.Font(None, 32)
+            pygame.draw.rect(display,gate_style[3],main_rect,border_radius=5)
+            text = font.render(gate, True, (10, 10, 10))
+            textpos = text.get_rect(centerx=(main_rect.width/2)+position[0], centery=(main_rect.height/2)+position[1])
+            display.blit(text, textpos)
+
+    
+    input_height = gate_style[0]/gate_style[1]
+    for i in range(gate_style[1]):
+        x=position[0]
+        y=position[1]+i*input_height+input_height//2
+        colour = colours[inputs[i]]
+        pygame.draw.circle(display, colour, (x,y), 7)
 
 
 
-
+process(circuit,tasklist)
+print(circuit)
 while True:
     #event handler
     for event in pygame.event.get():
@@ -129,9 +164,10 @@ while True:
 
         
     if update_required:
-        screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
+        #screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
+        #screen.blit(display,(0,0))
         pygame.display.update()
-        display.fill((80,96,126))
+        display.fill(BACKGROUND_COLOUR)
     clock.tick(60)
 
 '''
