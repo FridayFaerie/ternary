@@ -8,10 +8,10 @@ icon.fill((255,255,255))
 pygame.display.set_icon(icon)
 
 
-WINDOW_SIZE = (1600,800)
+WINDOW_SIZE = (800,400)
 BACKGROUND_COLOUR = (80,96,126)
-display = pygame.display.set_mode(WINDOW_SIZE,0,32)
-#display = pygame.Surface((800,600))
+screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
+display = pygame.Surface((1600,800))
 
 update_required = True
 
@@ -25,11 +25,11 @@ circuit = {
     0: ["input",    [1,0],  [(1,0),(2,0)],   [50,100]   ],
     1: ["split",    [2],    [(3,0),(4,0)],   [50,200]   ],
     2: ["split",    [2],    [(3,1),(4,1)],   [50,300]   ],
-    3: ["min",      [2,2],  [(6,0)],         [250,100]   ],
-    4: ["max",      [2,2],  [(5,0)],         [250,200]   ],
-    5: ["neg",      [2],    [(6,1)],         [250,300]   ],
-    6: ["max",      [2,2],  [(-1,0)],        [450,100]   ],
-    -1:["out",      [2],    [],              [450,200]   ]
+    3: ["min",      [2,2],  [(6,0)],         [250,100]  ],
+    4: ["max",      [2,2],  [(5,0)],         [250,200]  ],
+    5: ["neg",      [2],    [(6,1)],         [250,300]  ],
+    6: ["max",      [2,2],  [(-1,0)],        [450,100]  ],
+    -1:["out",      [2],    [],              [450,200]  ]
     }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
@@ -164,7 +164,7 @@ while True:
 
         
     if update_required:
-        #screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
+        screen.blit(pygame.transform.scale(display, WINDOW_SIZE),(0,0))
         #screen.blit(display,(0,0))
         pygame.display.update()
         display.fill(BACKGROUND_COLOUR)
