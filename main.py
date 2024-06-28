@@ -20,16 +20,18 @@ if sys.platform == 'win32':
 
 
 
-print(pygame.display.list_modes())
 
 #WINDOW_SIZE = (800,400)
 WINDOW_SIZE = (1600,800)
 BACKGROUND_COLOUR = (40,36,56)
 GATE_WIDTH = 130
+PORT_RADIUS = 7
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32)
 display = pygame.Surface((1600,800))
 
 update_required = True
+active_gate = None
+
 
 colours = {
     -1: (255,0,0),
@@ -37,16 +39,6 @@ colours = {
     1:  (0,0,255),
     2:  (0,0,0)
 }
-circuit = {
-    0: ["input",    [1,0],  [(1,0),(2,0)],   [50,300],  []                      ],
-    1: ["split",    [2],    [(3,0),(4,0)],   [200,200], [[(0,0),[]]]            ],
-    2: ["split",    [2],    [(3,1),(4,1)],   [200,400], [[(0,1),[]]]            ],
-    3: ["min",      [2,2],  [(6,0)],         [350,500], [[(1,0),[]],[(2,0),[]]] ],
-    4: ["max",      [2,2],  [(5,0)],         [350,300], [[(1,1),[]],[(2,1),[]]] ],
-    5: ["neg",      [2],    [(6,1)],         [500,300], [[(4,0),[]]]            ],
-    6: ["max",      [2,2],  [(-1,0)],        [650,300], [[(3,0),[]],[(5,0),[]]] ],
-    -1:["out",      [2],    [],              [800,300], [[(6,0),[]]]            ]
-    }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
 }
@@ -60,6 +52,34 @@ gate_styles = { #height, input#, output#, colour
 }
 tasklist = []
 
+
+input = {
+    0: ["input",    [1,0],  [(1,0),(2,0)],   [50,300] ],
+    1: ["split",    [2],    [(3,0),(4,0)],   [200,200]],
+    2: ["split",    [2],    [(3,1),(4,1)],   [200,400]],
+    3: ["min",      [2,2],  [(6,0)],         [350,500]],
+    4: ["max",      [2,2],  [(5,0)],         [350,300]],
+    5: ["neg",      [2],    [(6,1)],         [500,300]],
+    6: ["max",      [2,2],  [(-1,0)],        [650,300]],
+    -1:["out",      [2],    [],              [800,300]]
+    }
+circuit = input
+for item in input:
+    circuit[item].append([])
+for item in input:
+    component = input[item]
+    gate_style = gate_styles[component[0]]
+    circuit[item][3] = pygame.Rect(component[3],(GATE_WIDTH,gate_style[0]))
+
+    for num, destination in enumerate(component[2]):
+        circuit[destination[0]][4].append([(item, num),[]])
+
+
+
+
+
+def check_collision(a,b):
+    return False
 def process(circuit, tasklist):
     if not tasklist:
         update_gate(circuit, tasklist, 0)
@@ -131,7 +151,7 @@ gates_mul = {
 '''
 
 def render(component):
-    gate, inputs, destinations, position, connections = component
+    gate, inputs, destinations, gate_rect, connections = component
     match gate:
         case "input":
             return
@@ -139,48 +159,32 @@ def render(component):
         #     return
         case other:
             gate_style = gate_styles[gate]
-
-            gate_rect = pygame.Rect(position,(GATE_WIDTH,gate_style[0]))
-
             font = pygame.font.Font(None, 32)
             pygame.draw.rect(display,gate_style[3],gate_rect,border_radius=5)
             text = font.render(gate, True, (10, 10, 10))
-            textpos = text.get_rect(centerx=(gate_rect.width/2)+position[0], centery=(gate_rect.height/2)+position[1])
+            textpos = text.get_rect(centerx=(gate_rect.width/2)+gate_rect[0], centery=(gate_rect.height/2)+gate_rect[1])
             display.blit(text, textpos)
 
     
     input_height = gate_style[0]/gate_style[1]
     for i in range(gate_style[1]):
         colour = colours[inputs[i]]
-        x=position[0]
-        y=position[1]+i*input_height+input_height//2
-        end = (x,y)
-        pygame.draw.circle(display, colour, end, 7)
+        x=gate_rect[0]
+        y=gate_rect[1]+i*input_height+input_height//2
+        end = (x+PORT_RADIUS,y)
+        pygame.draw.circle(display, colour, end, PORT_RADIUS)
+        # pygame.draw.rect(display,colour,pygame.Rect(end[0]-PORT_RADIUS,end[1]-PORT_RADIUS,PORT_RADIUS*2,PORT_RADIUS*2),border_radius=PORT_RADIUS)
 
         connection = connections[i]
         source_gate = circuit[connection[0][0]]
         source_style = gate_styles[source_gate[0]]
-        start = (source_gate[3][0]+GATE_WIDTH, source_gate[3][1]+int((source_style[0]/source_style[2])*(connection[0][1]+0.5)))
+        start = (source_gate[3][0]+GATE_WIDTH-PORT_RADIUS, source_gate[3][1]+int((source_style[0]/source_style[2])*(connection[0][1]+0.5)))
 
         pygame.draw.lines(display, colour, False, [start]+connection[1]+[end],5)
-        pygame.draw.circle(display, colour, start, 7)
+        pygame.draw.circle(display, colour, start, PORT_RADIUS)
+        # pygame.draw.rect(display,colour,pygame.Rect(start[0]-PORT_RADIUS,start[1]-PORT_RADIUS,PORT_RADIUS*2,PORT_RADIUS*2),border_radius=PORT_RADIUS)
         
 
-'''
-def render_wire(wire):
-    path, source, destination = wire
-    source_gate = circuit[source[0]]
-    destination_gate = circuit[destination[0]]
-    source_style = gate_styles[source_gate[0]]
-    destination_style = gate_styles[destination_gate[0]]
-
-    colour = colours[destination_gate[1][destination[1]]]
-    start = [(source_gate[3][0]+GATE_WIDTH, source_gate[3][1]+int((source_style[0]/source_style[2])*(source[1]+0.5)))]
-    end = [(destination_gate[3][0],         destination_gate[3][1]+int((destination_style[0]/destination_style[1])*(destination[1]+0.5)))]
-
-    pygame.draw.lines(display, colour, False, start+path+end,10)
-    pygame.draw.circle(display, colour, start[0], 7)
-#'''
 
 process(circuit,tasklist)
 while True:
@@ -194,6 +198,19 @@ while True:
                 update_required = True
             elif event.key == K_LEFT:
                 update_required = False
+        elif event.type == MOUSEBUTTONDOWN:
+            if event.button == 1:
+                for component in circuit:
+                    if circuit[component][3].collidepoint(event.pos):
+                        active_gate = component
+                        print(active_gate)
+        elif event.type == MOUSEBUTTONUP:
+            active_gate = None
+        if event.type == MOUSEMOTION:
+            if active_gate != None:
+                circuit[active_gate][3].move_ip(event.rel)
+
+
 
     #render components on display
     for component in circuit:
