@@ -36,6 +36,7 @@ active_port_out = None
 tasklist = []
 next_component = 0
 testing = False
+selected_gate = None
 
 input_circuit = {
     0: ["input",    [1,0,-1],  [(1,0),(2,0),None],   [50,300] ],
@@ -364,6 +365,14 @@ while True:
                 next_component+=1
             elif event.key == K_LEFT:
                 testing = not testing
+            elif event.key == K_DELETE:
+                if selected_gate != None:
+                    for source in circuit[selected_gate].sources:
+                        circuit[source[0]].destinations[source[1]] = None
+                    for destination in circuit[selected_gate].destinations:
+                        circuit[destination[0]].sources[destination[1]] = None
+                        circuit[destination[0]].update_wires()
+                    circuit.pop(selected_gate)
         if event.type == MOUSEBUTTONUP:
             if active_port_in != None:
                 for num in circuit:
@@ -400,6 +409,7 @@ while True:
                     component = circuit[num]
                     if component.rect.collidepoint(event.pos):
                         active_gate = num
+                        selected_gate = num
 
                         if event.pos[0]<component.rect[0]+PORT_RADIUS*2.5:
                             active_port_in = component.inports_collision(event.pos)
