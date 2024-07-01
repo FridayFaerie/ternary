@@ -65,9 +65,7 @@ except:
 colours = {
     -1: (255,0,0),
     0:  (150,150,150),
-    1:  (0,0,255),
-    2:  BACKGROUND_COLOUR,
-    -2: BACKGROUND_COLOUR
+    1:  (0,0,255)
 }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
@@ -77,7 +75,10 @@ gate_styles = { #height, input#, output#, colour
     "split":    [80,1,2,(100,100,195)],
     "min":      [80,2,1,(200,150,230)],
     "max":      [80,2,1,(140,240,195)],
+    "sub":      [80,2,1,(230,190,230)],
+    "mul":      [80,2,1,(190,200,160)],
     "neg":      [40,1,1,(90,190,90)],
+    "and":      [80,2,1,(240,190,190)],
     "out":      [40,1,0,(190,90,90)],
     "dummy":    [40,1,1,(0,0,0)]
 }
@@ -135,6 +136,15 @@ class Component:
                 outputs = [inputs[0]]
             case "split":
                 outputs = [inputs[0],inputs[0]]
+            case "sub":
+                outputs = [min(max(inputs[0]-inputs[1],-1),1)]
+            case "mul":
+                outputs = [inputs[0]*inputs[1]]
+            case "and":
+                if inputs[0] == inputs[1]:
+                    outputs = [inputs[0]]
+                else:
+                    outputs = [0]
             case "out":
                 outputs = []
                 #print(outputs)
@@ -276,7 +286,10 @@ class Component:
         
         gate_style = gate_styles[self.gate_type]
         for i in range(gate_style[1]):
-            colour = colours[self.values[i]]
+            try:
+                colour = colours[self.values[i]]
+            except:
+                colour = BACKGROUND_COLOUR
             origin, *_, end = self.wires[i]
             if not end:
                 continue
@@ -288,21 +301,15 @@ class Component:
             # pygame.draw.circle(display, colour, start, PORT_RADIUS)
             pygame.draw.rect(display,colour,pygame.Rect(origin[0]-PORT_RADIUS,origin[1]-PORT_RADIUS,PORT_RADIUS*2,PORT_RADIUS*2),border_radius=3)
 
-#inports collision
-                            # spacing = gate_style[0]/gate_style[1]
-                            # for port in component.ports:
-                            #     if abs(rel_y-int(spacing*(port+0.5)))<PORT_RADIUS+1:
-                            #         active_port_in = port
-
-
 def process(circuit):
     if not tasklist:
         circuit[0].update_gate()
     
     counter = 0
     while tasklist:
-        circuit[tasklist[0]].update_gate()
+        next_task = tasklist[0]
         tasklist.pop(0)
+        circuit[next_task].update_gate()
 
         counter += 1
         if counter > 100:
@@ -349,8 +356,6 @@ process(circuit)
 
 while True:
 
-    if testing:
-        print(circuit[5].destinations)
 
 
     #event handler
@@ -389,6 +394,8 @@ while True:
                             circuit[destination[0]].sources[destination[1]] = None
                             circuit[destination[0]].update_wires()
                     circuit.pop(selected_gate)
+            elif event.key == K_r:
+                process(circuit)
         if event.type == MOUSEBUTTONUP:
             if active_port_in != None:
                 for num in circuit:
