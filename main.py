@@ -44,10 +44,9 @@ selected_gate = None
 
 
 try: 
-    with open('./circuits/default.pkl', 'rb') as f:
+    with open('./circuits/3trit.pkl', 'rb') as f:
         input_circuit = pickle.load(f)
     print("default input file loaded")
-    print(input_circuit)
 except:
     print("no default input file detected, loading default MUL circuit")
     input_circuit = {
@@ -62,6 +61,10 @@ except:
     -2:["dummy",    None,   [(-2,0)],        [-500,-500]]
     }
 
+
+input_circuit[0][1] = [1,1,1,0,0,0,-1,-1,-1]
+input_circuit[0][2] = [None,None,None,None,None,None,None,None,None]
+
 colours = {
     -1: (255,0,0),
     0:  (150,150,150),
@@ -71,7 +74,7 @@ custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
 }
 gate_styles = { #height, input#, output#, colour
-    "input":    [240,6,6,(123,74,195)],
+    "input":    [240,9,9,(123,74,195)],
     "split":    [80,1,2,(100,100,195)],
     "min":      [80,2,1,(200,150,230)],
     "max":      [80,2,1,(140,240,195)],
@@ -79,6 +82,8 @@ gate_styles = { #height, input#, output#, colour
     "mul":      [80,2,1,(190,200,160)],
     "neg":      [40,1,1,(90,190,90)],
     "and":      [80,2,1,(240,190,190)],
+    "half_adder":[80,2,2,(190,240,210)],
+    "adder":    [120,3,2,(210,240,210)],
     "out":      [40,1,0,(190,90,90)],
     "dummy":    [40,1,1,(0,0,0)]
 }
@@ -145,6 +150,14 @@ class Component:
                     outputs = [inputs[0]]
                 else:
                     outputs = [0]
+            case "half_adder":
+                if inputs[0]==inputs[1]:
+                    outputs = [inputs[0],-1*inputs[0]]
+                else:
+                    outputs = [0,inputs[0]+inputs[1]]
+            case "adder":
+                sum = inputs[0]+inputs[1]+inputs[2]
+                outputs = [int(sum/2),sum-3*int(sum/2)]
             case "out":
                 outputs = []
                 #print(outputs)
@@ -208,7 +221,7 @@ class Component:
                 return port
 
     def outports_collision(self, mouse_pos):
-        if self.id == -1:
+        if self.gate_type == "out":
             return
         gate_style = gate_styles[self.gate_type]
         output_height = gate_style[0]/gate_style[2]
@@ -395,6 +408,8 @@ while True:
                             circuit[destination[0]].update_wires()
                     circuit.pop(selected_gate)
             elif event.key == K_r:
+                for item in circuit:
+                    tasklist.append(item)
                 process(circuit)
         if event.type == MOUSEBUTTONUP:
             if active_port_in != None:
