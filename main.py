@@ -1,6 +1,10 @@
+import pickle
 import pygame, sys
 clock = pygame.time.Clock()
 from pygame.locals import *
+
+
+
 pygame.init()
 pygame.display.set_caption('Ternary Simulator')
 icon = pygame.Surface((10,10))
@@ -38,29 +42,38 @@ next_component = 0
 testing = False
 selected_gate = None
 
-input_circuit = {
-    0: ["input",    [1,0,-1],  [(1,0),(2,0),None],   [50,300] ],
-    1: ["split",    None,    [(3,0),(4,0)],   [200,200]],
-    2: ["split",    None,    [(3,1),(4,1)],   [200,400]],
-    3: ["min",      None,  [(6,0)],         [350,500]],
-    4: ["max",      None,  [(5,0)],         [350,300]],
-    5: ["neg",      None,    [(6,1)],         [500,300]],
-    6: ["max",      None,  [(-1,0)],        [650,300]],
-    -1:["out",      None,    [],              [800,300]],
-    -2:["dummy",    None,   [(-2,0)],              [-500,0]]
+
+try: 
+    with open('./circuits/default.pkl', 'rb') as f:
+        input_circuit = pickle.load(f)
+    print("default input file loaded")
+    print(input_circuit)
+except:
+    print("no default input file detected, loading default MUL circuit")
+    input_circuit = {
+    0: ["input",    [1,0,-1,1,0,-1],  [(1,0),(2,0),None,None,None,None],   [50,300] ],
+    1: ["split",    None,   [(4,0),(3,0)],   [200,300]],
+    2: ["split",    None,   [(4,1),(3,1)],   [200,450]],
+    3: ["min",      None,   [(6,1)],         [375,450]],
+    4: ["max",      None,   [(5,0)],         [375,300]],
+    5: ["neg",      None,   [(6,0)],         [530,325]],
+    6: ["max",      None,   [(-1,0)],        [700,375]],
+    -1:["out",      None,   [],              [875,400]],
+    -2:["dummy",    None,   [(-2,0)],        [-500,-500]]
     }
+
 colours = {
     -1: (255,0,0),
     0:  (150,150,150),
     1:  (0,0,255),
-    2:  (0,0,0),
-    -2: (0,0,0)
+    2:  BACKGROUND_COLOUR,
+    -2: BACKGROUND_COLOUR
 }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
 }
 gate_styles = { #height, input#, output#, colour
-    "input":    [80,3,3,(123,74,195)],
+    "input":    [240,6,6,(123,74,195)],
     "split":    [80,1,2,(100,100,195)],
     "min":      [80,2,1,(200,150,230)],
     "max":      [80,2,1,(140,240,195)],
@@ -75,11 +88,13 @@ class Component:
         self.id = id
         self.rect = pygame.Rect(position,(GATE_WIDTH, gate_styles[self.gate_type][0]))
         self.wires = []
-        self.sources = []
+        input_size = gate_styles[self.gate_type][1]
+
+        self.sources = [None] * input_size
         if values != None:
             self.values = values
         else:
-            self.values = [2] * gate_styles[self.gate_type][1]
+            self.values = [2] * input_size
 
         if destinations != None:
             self.destinations = destinations
@@ -89,7 +104,7 @@ class Component:
     def update_outports(self): #updates destination gates' sources
         for num, destination in enumerate(self.destinations):
             if destination:
-                circuit[destination[0]].sources.append((self.id, num))
+                circuit[destination[0]].sources[destination[1]]= (self.id, num)
 
     def update_inports(self): #updates destination gates' sources
         if self.sources:
@@ -147,7 +162,7 @@ class Component:
         for i in range(gate_styles[self.gate_type][2]):
             destination = self.destinations[i]
             if destination == None:
-                return
+                continue
 
             value = outputs[i]
 
@@ -246,6 +261,15 @@ class Component:
                 text = font.render(self.gate_type, True, (10, 10, 10))
                 textpos = text.get_rect(centerx=(self.rect.width/2)+self.rect[0], centery=(self.rect.height/2)+self.rect[1])
                 display.blit(text, textpos)
+                for outport in range(gate_style[2]):
+                    output_height = gate_style[0]/gate_style[2]
+                    origin = (self.rect[0]+GATE_WIDTH-1.5*PORT_RADIUS,self.rect[1]+(outport+0.5)*output_height)
+                    pygame.draw.rect(display,BACKGROUND_COLOUR,pygame.Rect(origin[0]-PORT_RADIUS,origin[1]-PORT_RADIUS,PORT_RADIUS*2,PORT_RADIUS*2),border_radius=3)
+                
+
+
+
+
     def render_wires(self):
         if self.id == -2:
             return
@@ -284,40 +308,20 @@ def process(circuit):
         if counter > 100:
             print("max cycles exceeded")
             break
-        
-'''
-def update_gate_outports(component, destination, num):
-    if not destination:
-        return
-    
-    gate_style = gate_styles[component[0]]
-    origin = (component[3][0]+GATE_WIDTH-PORT_RADIUS, component[3][1]+(gate_style[0]/gate_style[2])*(num+0.5))
-    
 
-    gate_rect = circuit[destination[0]][3]
-    destination_style = gate_styles[circuit[destination[0]][0]]
-    input_height = destination_style[0]/destination_style[1]
-    end = (gate_rect[0]+PORT_RADIUS, gate_rect[1]+destination[1]*input_height+input_height//2)
+def save_circuit():
+    file_name = input("please input file name: ")
 
-    circuit[destination[0]][4][destination[1]][1] = [origin,end]
-
-def update_gate_inports(component):
-    for num,input in enumerate(component[4]):
-        gate_style = gate_styles[component[0]]
-        source = circuit[input[0][0]]
-        source_style = gate_styles[source[0]]
-        input[1][0] = (source[3][0]+GATE_WIDTH-PORT_RADIUS, source[3][1]+(source_style[0]/source_style[2])*(num+0.5))
-        input[1][-1] = (component[3][0]+PORT_RADIUS, component[3][1]+gate_style[0]/gate_style[1]*(num+0.5))
+    output_circuit = {}
+    for item in circuit:
+        component = circuit[item]
+        output_circuit[item] = [component.gate_type, component.values, component.destinations, [component.rect[0],component.rect[1]]]
 
 
-def check_collision(a,b):
-    return False
+    with open(f'./circuits/{file_name}.pkl', 'wb') as f:
+        pickle.dump(output_circuit, f)
 
 
-
-
-        
-'''
 
 
 circuit = {}
@@ -329,17 +333,24 @@ for component in circuit:
     circuit[component].update_wires()
     next_component = max(component,next_component)
 
+
 next_component +=1
+
+
 
 process(circuit)
 
-# for component in circuit:
-#     print(circuit[component])
+
+        
+
+
+
+
 
 while True:
 
     if testing:
-        print(active_port_out)
+        print(circuit[5].destinations)
 
 
     #event handler
@@ -365,13 +376,18 @@ while True:
                 next_component+=1
             elif event.key == K_LEFT:
                 testing = not testing
+            elif event.key == K_DOWN:
+                if input("going to save a file; type y to proceed: ")=="y":
+                    save_circuit()
             elif event.key == K_DELETE:
                 if selected_gate != None:
                     for source in circuit[selected_gate].sources:
-                        circuit[source[0]].destinations[source[1]] = None
+                        if source:
+                            circuit[source[0]].destinations[source[1]] = None
                     for destination in circuit[selected_gate].destinations:
-                        circuit[destination[0]].sources[destination[1]] = None
-                        circuit[destination[0]].update_wires()
+                        if destination:
+                            circuit[destination[0]].sources[destination[1]] = None
+                            circuit[destination[0]].update_wires()
                     circuit.pop(selected_gate)
         if event.type == MOUSEBUTTONUP:
             if active_port_in != None:
