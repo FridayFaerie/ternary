@@ -44,7 +44,7 @@ selected_gate = None
 
 
 try: 
-    with open('./circuits/3trit.pkl', 'rb') as f:
+    with open('./circuits/test.pkl', 'rb') as f:
         input_circuit = pickle.load(f)
     print("default input file loaded")
 except:
@@ -58,7 +58,7 @@ except:
     5: ["neg",      None,   [(6,0)],         [530,325]],
     6: ["max",      None,   [(-1,0)],        [700,375]],
     -1:["out",      None,   [],              [875,400]],
-    -2:["dummy",    None,   [(-2,0)],        [-500,-500]]
+    -2:["dummy",    [2],   [(-2,0)],        [-500,-500]]
     }
 
 
@@ -66,9 +66,10 @@ input_circuit[0][1] = [1,1,1,0,0,0,-1,-1,-1]
 input_circuit[0][2] = [None,None,None,None,None,None,None,None,None]
 
 colours = {
-    -1: (255,0,0),
+    -1: (160,0,0),
     0:  (150,150,150),
-    1:  (0,0,255)
+    1:  (0,0,255),
+    2: (255,255,255)
 }
 custom_gates = {
     "pos": {'0':[1],'+':[1],'-':[2]}
@@ -76,6 +77,7 @@ custom_gates = {
 gate_styles = { #height, input#, output#, colour
     "input":    [240,9,9,(123,74,195)],
     "split":    [80,1,2,(100,100,195)],
+    "3split":   [120,1,3,(100,100,195)],
     "min":      [80,2,1,(200,150,230)],
     "max":      [80,2,1,(140,240,195)],
     "sub":      [80,2,1,(230,190,230)],
@@ -85,6 +87,7 @@ gate_styles = { #height, input#, output#, colour
     "half_adder":[80,2,2,(190,240,210)],
     "adder":    [120,3,2,(210,240,210)],
     "out":      [40,1,0,(190,90,90)],
+    "test":     [120,3,1,(255,0,255)],
     "dummy":    [40,1,1,(0,0,0)]
 }
 
@@ -141,6 +144,8 @@ class Component:
                 outputs = [inputs[0]]
             case "split":
                 outputs = [inputs[0],inputs[0]]
+            case "3split":
+                outputs = [inputs[0],inputs[0],inputs[0]]
             case "sub":
                 outputs = [min(max(inputs[0]-inputs[1],-1),1)]
             case "mul":
@@ -163,6 +168,10 @@ class Component:
                 #print(outputs)
             case "dummy":
                 outputs = []
+            case "test":
+                outputs = [None] * gate_style[1]
+                for i in range(gate_style[1]):
+                    outputs[i] = inputs[i]
             case other:
                 if self.gate_type in custom_gates:
                     inputstring = ''
@@ -294,9 +303,6 @@ class Component:
 
 
     def render_wires(self):
-        if self.id == -2:
-            return
-        
         gate_style = gate_styles[self.gate_type]
         for i in range(gate_style[1]):
             try:
@@ -430,6 +436,8 @@ while True:
                             port = None
 
             if active_port_in != None:
+                if active_gate == -2:
+                    circuit[active_gate].sources[0] = (-2,0)
                 circuit[active_gate].update_wires()
             elif active_port_out != None:
                 to_update = circuit[active_gate].destinations[active_port_out]
@@ -462,6 +470,7 @@ while True:
                             if active_port_out!=None and circuit[active_gate].destinations[active_port_out] == None:
                                 circuit[-2].sources[0] = (active_gate,active_port_out)
                                 circuit[-2].update_wires()
+                                circuit[-2].wires[0][-1] = event.pos
                                 print(circuit[-2].wires)
                                 active_gate = -2
                                 active_port_out = None
@@ -485,7 +494,6 @@ while True:
                         continue
                     circuit[destination_gate[0]].update_wires()
 
-#{-1: ['out', [0], [], <rect(975, 473, 130, 40)>, [[(6, 0), []]]]}
 
 
     #render components on display
